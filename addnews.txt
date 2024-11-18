@@ -1,0 +1,33 @@
+post('/add', (req, res)=>{
+	if(!req.body.titleInput || !req.body.contentInput || !req.body.expireInput){
+		console.log('Uudisega jama');
+		notice = 'Andmeid puudu!';
+		res.render('addnews', {notice: notice});
+	}
+	else {
+		let sql = 'INSERT INTO vpnews (title, content, expire, userid) VALUES(?,?,?,?)';
+		let userid = 1;
+		//andmebaasi ühendus pool'i kaudu
+		pool.getConnection((err, conn)=>{
+			if(err){
+				throw err;
+			}
+			else {
+				//andmebaasi osa
+				conn.execute(sql, [req.body.titleInput, req.body.contentInput, req.body.expireInput, userid], (err, result)=>{
+					if(err) {
+						throw err;
+						notice = 'Uudise salvestamine ebaõnnestus!';
+						res.render('addnews', {notice: notice});
+						conn.release();
+					} else {
+						notice = 'Uudis edukalt salvestatud!';
+						res.render('addnews', {notice: notice});
+						conn.release();
+					}
+				});
+				//andmebaasi osa lõppeb
+			}
+		});
+	}
+});

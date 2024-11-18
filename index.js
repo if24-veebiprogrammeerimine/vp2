@@ -31,7 +31,7 @@ app.use(bodyparser.urlencoded({extended: true}));
 const upload = multer({dest: "./public/gallery/orig"});
 //sessioonihaldur
 app.use(session({secret: "minuAbsoluutseltSalajaneVõti", saveUninitialized: true, resave: true}));
-let mySession;
+//let mySession;
 
 //loon andmebaasiühenduse
 const connInga = mysql.createConnection({
@@ -46,6 +46,10 @@ const conn = mysql.createConnection({
 	password: dbInfo.configData.passWord,
 	database: dbInfo.configData.dataBase
 });
+
+//uudiste osa eraldi ruuteriga
+const newsRouter = require("./routes/newsRouter");
+app.use("/news", newsRouter);
 
 app.get("/", (req, res)=>{
 	//res.send("Express läks käima!");
@@ -82,8 +86,9 @@ app.post("/", (req, res)=>{
 							if(compareresult){
 								notice = "Oledki sisseloginud!";
 								//võtame sessiooni kasutusele
-								mySession = req.session;
-								mySession.userId = result[0].id;
+								//mySession = req.session;
+								//mySession.userId = result[0].id;
+								req.session.userId = result[0].id;
 								//res.render("index", {notice: notice});
 								res.redirect("/home");
 							}
@@ -106,12 +111,12 @@ app.post("/", (req, res)=>{
 
 app.get("/logout", (req, res)=>{
 	req.session.destroy();
-	mySession = null;
+	//mySession = null;
 	res.redirect("/");
 });
 
 app.get("/home", checkLogin, (req, res)=>{
-	console.log("Sisse on loginud kasutaja: " + mySession.userId);
+	console.log("Sisse on loginud kasutaja: " + req.session.userId);
 	res.render("home");
 });
 
@@ -379,8 +384,8 @@ app.get("/gallery", (req, res)=>{
 });
 
 function checkLogin(req, res, next){
-	if(mySession != null){
-		if(mySession.userId){
+	if(req.session != null){
+		if(req.session.userId){
 			console.log("Login ok!");
 			next();
 		}
