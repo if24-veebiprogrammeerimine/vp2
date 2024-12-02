@@ -1,0 +1,12 @@
+Viljavedu
+Tuleb luua lehestik, mis laseb märkida, mis numbriga auto, kui palju kaalus lattu sisenemisel ja kui palju väljumisel (andmetabelis id, auto registrinumber, lattu sisenemismass ja laost väljumismass ehk tühimass).
+•	Viljaveo leht peab laskma sisestada auto, mis koorma tõi, numbri ja lattu sisenemismassi ning väljumismassi.
+•	Kokkuvõtte lehel peab saama vaadata kõiki koormaid ja veetud vilja kogumassi. Koormaid peab saama ka autonumbri järgi filtreerida (vaadata ühe auto koormaid ja veetud vilja massi).
+•	Kuna auto tühjendamise ajal võib saabuda järgmine auto, peaks alguses saama sisestada sisenemismassi ja seejärel peaks saama kõikide väljumismassita koormate seast vajalikku valida ja väljumismassi sisestada.
+Esitamiseks tuleb saata e-mail aadressile rinde@tlu.ee
+Kirja teemaks “vp_eksam”
+Kirja sisus on vaja välja tuua:
+•	Oma kasutajanimi greeny’s
+•	Oma eksamitöö asukoht greeny’s, mis paistab ftp-programmis (näiteks: /home/kasutaja/public_html/vp23/eksam/ )
+•	Oma andmebaasi nimi ja loodud tabelite nimed
+•	Manusena palun kaasa panna kõik eksami käigus loodud failid (js ja ejs). Seejuures tuleb js failide laiendid muuta näiteks txt-k sest muidu ei luba gmail neid saata.

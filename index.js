@@ -17,6 +17,7 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 //asünkroonsuse võimaldaja
 const asyn = require("async");
+const general = require("./generalFnc");
 
 
 const app = express();
@@ -34,12 +35,6 @@ app.use(session({secret: "minuAbsoluutseltSalajaneVõti", saveUninitialized: tru
 //let mySession;
 
 //loon andmebaasiühenduse
-const connInga = mysql.createConnection({
-	host: dbInfo.configData.host,
-	user: dbInfo.configData.user,
-	password: dbInfo.configData.passWord,
-	database: "if24_inga_pe_DM"
-});
 const conn = mysql.createConnection({
 	host: dbInfo.configData.host,
 	user: dbInfo.configData.user,
@@ -50,6 +45,10 @@ const conn = mysql.createConnection({
 //uudiste osa eraldi ruuteriga
 const newsRouter = require("./routes/newsRouter");
 app.use("/news", newsRouter);
+
+//Eesti film osa eraldi ruuteriga
+const eestifilmRouter = require("./routes/eestifilmRoutes");
+app.use("/eestifilm", eestifilmRouter);
 
 app.get("/", (req, res)=>{
 	//res.send("Express läks käima!");
@@ -115,7 +114,7 @@ app.get("/logout", (req, res)=>{
 	res.redirect("/");
 });
 
-app.get("/home", checkLogin, (req, res)=>{
+app.get("/home", general.checkLogin, (req, res)=>{
 	console.log("Sisse on loginud kasutaja: " + req.session.userId);
 	res.render("home");
 });
@@ -249,154 +248,16 @@ app.post("/regvisitdb", (req, res)=>{
 	}
 });
 
-app.get("/eestifilm", (req, res)=>{
-	res.render("eestifilm");
-});
+//fotode üleslaadimise osa eraldi marsruutide failiga
+const photoupRouter = require("./routes/photouploadRoutes");
+app.use("/photoupload", photoupRouter);
 
-app.get("/eestifilm/tegelased", (req, res)=>{
-	//loon andmebaasipäringu
-	let sqlReq = "SELECT id, first_name, last_name, birth_date FROM person";
-	connInga.query(sqlReq, (err, sqlRes)=>{
-		if(err){
-			res.render("tegelased", {persons: []});
-			//throw err;
-		}
-		else {
-			//console.log(sqlRes);
-			res.render("tegelased", {persons: sqlRes});
-		}
-	});
-	//res.render("tegelased");
-});
+//galerii osa eraldi marsruutide failiga
+const galleryRouter = require("./routes/galleryRoutes");
+app.use("/gallery", galleryRouter);
 
-app.get("/eestifilm/personrelations/:id", (req, res)=>{
-	console.log(req.params.id);
-	res.render("personrelations");
-});
-
-app.get("/eestifilm/lisa", (req, res)=>{
-	res.render("addperson");
-});
-
-app.get("/eestifilm/lisaseos", (req, res)=>{
-	//kasutades async moodulit, panen mitu andmebaasipäringut paraleelselt toimima
-	//loon SQL päringute (lausa tegevuste ehk funktsioonide) loendi
-	const myQueries = [
-		function(callback){
-			connInga.execute("SELECT id, first_name, last_name, birth_date FROM person", (err, result)=>{
-				if(err){
-					return callback(err);
-				}
-				else {
-					return callback(null, result);
-				}
-			});
-		},
-		function(callback){
-			connInga.execute("SELECT id, title, production_year FROM movie", (err, result)=>{
-				if(err){
-					return callback(err);
-				}
-				else {
-					return callback(null, result);
-				}
-			});
-		},
-		function(callback){
-			connInga.execute("SELECT id, position_name FROM position", (err, result)=>{
-				if(err){
-					return callback(err);
-				}
-				else {
-					return callback(null, result);
-				}
-			});
-		}
-	];
-	//paneme need tegevused paraleelselt tööle, tulemuse saab siis, kui kõik tehtud
-	//väljundiks üks koondlist
-	asyn.parallel(myQueries, (err, results)=>{
-		if(err){
-			throw err;
-		}
-		else {
-			console.log(results);
-			res.render("addrelations", {personList: results[0], movieList: results[1], positionList: results[2]});
-		}
-	});
-	/* let sqlReq = "SELECT id, first_name, last_name, birth_date FROM person";
-	connInga.execute(sqlReq, (err, result)=>{
-		if(err){
-			throw err;
-		}
-		else {
-			console.log(result);
-			res.render("addrelations", {personList: result});
-		}
-	}); */
-	//res.render("addrelations");
-});
-
-app.get("/photoupload", (req, res)=>{
-	res.render("photoupload");
-});
-
-app.post("/photoupload", upload.single("photoInput"), (req, res)=>{
-	console.log(req.body);
-	console.log(req.file);
-	const fileName = "vp_" + Date.now() + ".jpg";
-	fs.rename(req.file.path, req.file.destination + "/" + fileName, (err)=>{
-		console.log("Faili nime muutmise viga: " + err);
-	});
-	sharp(req.file.destination + "/" + fileName).resize(800,600).jpeg({quality: 90}).toFile("./public/gallery/normal/" + fileName);
-	sharp(req.file.destination + "/" + fileName).resize(100,100).jpeg({quality: 90}).toFile("./public/gallery/thumb/" + fileName);
-	//salvestame info andmebaasi
-	let sqlReq = "INSERT INTO vp2photos (file_name, orig_name, alt_text, privacy, user_id) VALUES(?,?,?,?,?)";
-	const userId = 1;
-	conn.query(sqlReq, [fileName, req.file.originalname, req.body.altInput, req.body.privacyInput, userId], (err, result)=>{
-		if(err){
-			throw(err);
-		}
-		else {
-			res.render("photoupload");
-		}
-	});
-	
-});
-
-app.get("/gallery", (req, res)=>{
-	let sqlReq = "SELECT id, file_name, alt_text FROM vp2photos WHERE privacy = ? AND deleted IS NULL ORDER BY id DESC";
-	const privacy = 3;
-	let photoList = [];
-	conn.execute(sqlReq, [privacy], (err, result)=>{
-		if(err){
-			throw err;
-		}
-		else {
-			console.log(result);
-			for(let i = 0; i < result.length; i ++) {
-				photoList.push({id: result[i].id,  href: "/gallery/thumb/", filename: result[i].file_name, alt: result[i].alt_text});
-			}
-			res.render("gallery", {listData: photoList});
-		}
-	});
-	//res.render("gallery");
-});
-
-function checkLogin(req, res, next){
-	if(req.session != null){
-		if(req.session.userId){
-			console.log("Login ok!");
-			next();
-		}
-		else {
-			console.log("Login not detected!");
-			res.redirect("/");
-		}
-	}
-	else {
-		res.redirect("/");
-	}
-}
+//ilmateate osa eraldi marsruutide failiga
+const weatherRouter = require("./routes/weatherRoutes");
+app.use("/weather", weatherRouter);
 
 app.listen(5200);

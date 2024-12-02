@@ -68,7 +68,7 @@ const newsList = (req, res)=>{
 				notice = 'Uudiste lugemine ebaõnnestus!' + err;
 				res.render('readnews', {news: news});
 			} else {
-				notice = 'Uudis edukalt salvestatud!';
+				notice = 'Uudised edukalt loetud!';
 				res.render('readnews', {news: result});
 			}
 		});

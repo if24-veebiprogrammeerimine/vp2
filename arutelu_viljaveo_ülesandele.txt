@@ -1,0 +1,23 @@
+1. Planeerimine
+
+2. andmebaas
+
+3. vaated, ehk mallid (ejs)
+a) avaleht (valikud: sisesta auto sisenemine, auto väljumine, kokkuvõte)
+b) need valikutega seotud lehed
+
+4) Javascript
+
+Esimene vaade, auto sisenemine ja väljumine -> vorm, auto nr, sisenemismass, väljumismass
+Javascriptis get
+post 
+
+teine vaade peab sisse lugema kõik koormad, millel veel pole väljumismassi - get, pakkuma neid rippmenüüs
+post osa peab muutma selle koorma kirjet andmetabelis, lisama väljumismassi
+
+
+UPDATE  vp2viljavedu SET weight_out = ? WHERE id = ?
+
+Vilja kogus
+
+SELECT SUM(weight_in), SUM(weight_out) FROM vp2viljavedu WHERE weight_out IS NOT NULL;
